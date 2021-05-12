@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <p>Set elevid to begin syncing</p>
+
+    <label for="name">elevid (fra lectio):</label>
+    <input type="text" id="elevid" name="elevid" required minlength="16" maxlength="16" size="10">
+    <button onclick="setNewID()">Set elevid</button>
+
+    <p id="demo"></p>
+
+    <script>
+        var socket = new WebSocket('ws://' + window.location.hostname + ':3000/');
+        var demo = document.getElementById("demo");
+        var id = "";
+
+        function setNewID() {
+            id = document.getElementById("elevid").value;  
+        }
+
+        function error(err) {
+            console.warn('ERROR(' + err.code + '): ' + err.message);
+        }
+
+        function isIDValid() {
+            return /\d{11}/.test(id);
+        }
+
+        function success(position) {
+            // Update demo area.
+            demo.innerHTML = "Latitude: " + position.coords.latitude +
+                "<br>Longitude: " + position.coords.longitude +
+                "<br>Altitude: " + position.coords.altitude + 
+                "<br>Altitude Accuracy: " + position.coords.altitudeAccuracy;
+
+            if (!isIDValid()) {
+                demo.innerHTML += "<br><p>ElevID is not valid</p>";
+                return;
+            }
+
+            socket.send(JSON.stringify({
+                "type": "position",
+                "id": id,
+                "coords": { 
+                    "lat": position.coords.latitude,
+                    "long": position.coords.longitude,
+                    "alt": position.coords.altitude,
+                    "altAccuracy": position.coords.altitudeAccuracy
+                   }
+            }));
+
+            demo.innerHTML += "<br><p>Up to date.</p>"
+        }
+
+        window.onload = function () {
+            var options = {
+                enableHighAccuracy: true,
+                timeout: 1000,
+                maximumAge: 0
+            };
+
+            navigator.geolocation.watchPosition(success, error, options);
+        }
+
+    </script>
+</body>
+</html>
