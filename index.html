@@ -41,6 +41,7 @@
             socket.send(JSON.stringify({
                 "type": "position",
                 "id": id,
+                "hb": new Date().getTime(),
                 "coords": { 
                     "lat": position.coords.latitude,
                     "long": position.coords.longitude,

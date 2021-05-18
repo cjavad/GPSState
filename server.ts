@@ -6,12 +6,24 @@ import * as WebSocket from 'ws';
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+const WIPE_STATE_DELAY = 10000;
 
 let currentState: Record<string, any> = {};
+
+function stateCheck() {
+    for (const key in currentState) {
+        const state = currentState[key];
+
+        if (new Date().getTime() - state.hb > WIPE_STATE_DELAY) {
+            delete currentState[key];
+        }
+    }
+}
 
 wss.on('connection', (ws: WebSocket) => {
     ws.on('message', (message: string) => {
         console.log('received: %s', (message));
+        stateCheck();
         // Convert json string into json object
         const data: Record<string, any> = JSON.parse(message);
 
